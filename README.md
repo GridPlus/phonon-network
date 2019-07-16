@@ -25,7 +25,37 @@ When a user wishes to withdraw a phonon onto the blockchain network from which i
 
 ### Where is the Trust?
 
-Although not strictly part of the Phonon Network, it is important for participants to trust the issuance of their counterparty (i.e. that the counterparty's card is indeed running Phonon and will not double spend). This is generally accomplished with a **certificate signer** (usually the card issuer), who signs the identity public key of the card in the manufacturing provisioning process. When interacting with another card, this certificate (ECDSA signature) is presented as proof that the card was created and authenticated by a known card issuer.
+Trust in the Phonon network comes down to two things:
+
+1. The hardware is correct (trust in manufacturer)
+2. The software is correct (trust in issuer)
+
+Every issuer must assume 1 to be true at all times, thus all trust is pushed to the issuer.
+
+#### Issuing and Signing Cards
+
+When a card is issued, a unique identity key is generated when the software is installed. The identity public key is signed by the issuer (using an ECDSA signature) and this validating signature is saved on the card in such a way that it cannot be changed or removed. It is also published on an accesible online registry (e.g. an Ethereum smart contract) such that any participant can verify that a counterparty's card's identity public key was signed by a recognized card issuer.
+
+End each card issuer's public key must be itself signed by a **meta issuer**, which is likely to be an n-of-m multisignature scheme. The meta issuer publishes its *own* registry of *issuer public keys*.
+
+Thus, there are *two* online registries:
+
+1. A registry containing card identity public keys signed by their respective card issuers' keys
+2. A registry containing a set of "approved" card issuers' oublic keys, signed by a "meta issuer" key
+
+#### Validating Signatures During Transfer
+
+Each card is loaded with the public key of the meta issuer, which is used to prove the root of trust when receiving a phonon (explained in detail in a later section). Roughly, the check is as follows:
+
+1. Alice wants to send Bob a phonon
+2. Alice encrypts the phonon payload with a shared secret derived from her identity private key and a public key Bob sent her
+3. Alice sends the phonon payload as well as her card's identity public key, the signature of her card's id public key by her card issuer, and the signature of her card issuer's public key by the meta issuer
+4. Bob receives and decrypts the payload, verifying that Alice owns the private key corresponding to what she claims is her id public key (otherwise the shared secret would be different and the phonon would not be properly decrypted, in which case this process is moot)
+5. Bob's card validates the first signature (i.e. that the purported card issuer signed Alice's id public key)
+6. Bob's card validates the second signature (i.e. that Alice's card's issuer was signed by the meta issuer)
+7. Bob's card saves the phonon. Success!
+
+In order to do this validation, Bob's card must have a copy of the meta issuer's public key - this allows it to establish the root of trust. After establishing the root, he further establishes the chain of trust, i.e. that the validated card issuer validated Alice's card. This gives him confidence that Alice's card is a valid card within the Phonon Network.
 
 # Structure of a Phonon
 
