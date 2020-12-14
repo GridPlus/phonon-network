@@ -95,7 +95,21 @@ The following table contains the full list of supported commands. [Section 3.2](
 The following sections describe the data format of each command and the card's response to that command.
 
 #### SELECT
-TODO: Add data format.
+* P1: 0x00
+* P2: 0x00
+
+Command Data:
+```
++---------------+----------------+
+| RID (5 bytes) | PIX (11 bytes) |
++---------------+----------------+
+```
+Response Data:
+```
++-------------------+--------------------+
+| Version (3 bytes) | cardPub (variable) |
++-------------------+--------------------+
+```
 
 #### OPEN_CHANNEL
 Open a secure channel with the card. All phonon operations require messages to be exchanged securely via a secure channel. Thus, this operation must be performed before any phonon operations may be performed.
@@ -107,7 +121,17 @@ TODO: Add data format.
 TODO: Add data format.
 
 #### VERIFY_PIN
-TODO: Add data format.
+* P1: 0x00
+* P2: 0x00
+
+Command Data:
+```
++------------------------------+
+| PIN string (variable length) |
++------------------------------+
+```
+Response Data
+Empty. Successful response status code (0x9000) means PIN verification was successful.
 
 #### LIST_PHONONS
 TODO: Add data format.
