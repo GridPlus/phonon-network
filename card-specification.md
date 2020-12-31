@@ -68,6 +68,34 @@ Terminal                                                                   Card
 |                                                                              |
 ```
 
+Card to Card Secure Channel
+```
+Sender Card                                   TERMINAL                              Receiver Card
+========                                       ======                                =============
+|                                                                                                         |
+| :::::::::::::::::::::::::::::::::::::::: OPEN_CHANNEL :::::::::::::::::::::::::::::::::::::::::         |
+| <---------------------------------------INIT_CARD_PAIRING                                               |
+| senderSalt := random()                                                                                  |
+| (senderCert, senderPub, senderSalt)-->CARD_PAIR---------------------------------------------->          |                                             
+|                                                                      GRIDPLUS_CA_KEY.verify(senderCert) |
+|                                                                                receiverSalt := random() |
+|                                                                ecdhSec := ECDH(senderPub, receiverPriv) |
+|                                                              sessionKey := sha512(senderSalt | ecdhSec) |
+|                                                                                       aesIV := random() |
+|                                                       channel := new_channel(encryptKey, macKey, aesIV) |
+|                                            receiverSig := receiverPriv.sign(sha256(sessionKey | aesIV)) |
+| <--------------------------CARD_PAIR_2<---(receiverCert, receiverPub, receiverSalt, aesIV, receiverSig) |
+| GRIDPLUS_CA_KEY.verify(receiverCert)                                                                    |
+| ecdhSec := ECDH(receiverPub, senderPriv)                                                                |
+| sessionKey := sha512(receiverSalt | ecdhSec)                                                            |
+| receiverPub.verify(receiverSig, sha256(sessionKey | aesIV))                                             |
+| senderSig := senderSig.sign(sha256(sessionKey | aesIV))                                                 |  
+| (encryptKey, macKey) := split(sessionKey)                                                               |       
+| channel := new_channel(encryptKey, macKey, aesIV)                                                       |
+| (senderSig, senderPairingIdx)-------------->FINALIZE_CARD_PAIRING-------------------------------------->|
+|                                                   senderPub.verify(senderSig, sha256(sessionKey | aesIV)|
+|                                  (Terminal stores channel info)<-------------------(receiverPairingIdx) |
+```
 ## 2 Communication Protocol
 Card commands are exchanged via ISO-7816 command/response APDU protocol.
 
