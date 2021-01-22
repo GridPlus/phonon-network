@@ -150,8 +150,15 @@ Command Data
 |:---------------|:---------------|
 | Challenge Salt |    32          |
 
-#### LOAD_CERT
 
+Response Data
+| Field          | Length (Bytes) | 
+|:---------------|:---------------|
+| Card Identity Pub Key |  65     |
+| Challenge Salt Signature |   72 - 74? | 
+   
+#### LOAD_CERT
+TBD
 
 #### OPEN_CHANNEL
 Open a secure channel with the card. All phonon operations require messages to be exchanged securely via a secure channel. Thus, this operation must be performed before any phonon operations may be performed.
