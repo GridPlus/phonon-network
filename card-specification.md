@@ -107,8 +107,10 @@ The following table contains the full list of supported commands. [Section 3.2](
 ### 3.1 Command Table
 | Name            | CMD_ID   | Description |
 |:----------------|:---------|:------------|
-| [INIT](#init)                       | 0xFE | Initialize a new card by setting the pin |
 | [SELECT](#select)                   | 0xA4 | Instruct the secure element to select and load the Phonon applet for use. |
+| [IDENTIFY_CARD](#identify_card)     | 0x14 | Send a challenge salt to the card, receive back the card's identity pubkey and a signature proving it's possession of the private key  |
+| [LOAD_CERT](#load_cert)             | 0x15 | Load a certificate to validate the card's public key has been signed by the Gridplus CA |
+| [INIT](#init)                       | 0xFE | Initialize a new card by setting the pin |
 | [OPEN_CHANNEL](#open_channel)       | TBD | Open a secure channel with the card. |
 | [MUTUAL_AUTH](#mutual_auth)         | TBD | Mutually authenticate a newly created channel. |
 | [VERIFY_PIN](#verify_pin)           | TBD | Verify the user's PIN to unlock the card for use. |
@@ -151,6 +153,24 @@ Response Data:
 +-------------------+--------------------+
 ```
 
+#### IDENTIFY_CARD
+* P1: 0x00
+* P2: 0x00
+
+Command Data
+| Field          | Length (Bytes) | 
+|:---------------|:---------------|
+| Challenge Salt |    32          |
+
+
+Response Data
+| Field          | Length (Bytes) | 
+|:---------------|:---------------|
+| Card Identity Pub Key |  65     |
+| Challenge Salt Signature |   72 - 74? | 
+   
+#### LOAD_CERT
+TBD
 
 #### OPEN_CHANNEL
 Open a secure channel with the card. All phonon operations require messages to be exchanged securely via a secure channel. Thus, this operation must be performed before any phonon operations may be performed.
