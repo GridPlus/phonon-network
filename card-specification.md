@@ -107,9 +107,10 @@ The following table contains the full list of supported commands. [Section 3.2](
 ### 3.1 Command Table
 | Name            | CMD_ID   | Description |
 |:----------------|:---------|:------------|
-| [SELECT](#select)                   | TBD | Instruct the secure element to select and load the Phonon applet for use. |
+| [SELECT](#select)                   | 0xA4 | Instruct the secure element to select and load the Phonon applet for use. |
 | [IDENTIFY_CARD](#identify_card)     | 0x14 | Send a challenge salt to the card, receive back the card's identity pubkey and a signature proving it's possession of the private key  |
 | [LOAD_CERT](#load_cert)             | 0x15 | Load a certificate to validate the card's public key has been signed by the Gridplus CA |
+| [INIT](#init)                       | 0xFE | Initialize a new card by setting the pin |
 | [OPEN_CHANNEL](#open_channel)       | TBD | Open a secure channel with the card. |
 | [MUTUAL_AUTH](#mutual_auth)         | TBD | Mutually authenticate a newly created channel. |
 | [VERIFY_PIN](#verify_pin)           | TBD | Verify the user's PIN to unlock the card for use. |
@@ -124,8 +125,18 @@ The following table contains the full list of supported commands. [Section 3.2](
 ### 3.2 Data Format
 The following sections describe the data format of each command and the card's response to that command.
 
-#### SELECT
+#### INIT
+* CMD: 0xFE
 * P1: 0x00
+* P2: 0x00
+
+Command Data:
+| Field | Length |
+|:------|:-------|
+| Pin | (variable)|
+
+#### SELECT
+* P1: 0x04
 * P2: 0x00
 
 Command Data:
@@ -134,6 +145,7 @@ Command Data:
 | RID (5 bytes) | PIX (11 bytes) |
 +---------------+----------------+
 ```
+If the card is already initialized: 
 Response Data:
 ```
 +-------------------+--------------------+
