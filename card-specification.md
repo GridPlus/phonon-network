@@ -163,7 +163,7 @@ Return TLV Data Layout
 |    0x8f  | 16       | Card UID                           |
 |    0x80  | Variable | Card Secure Channel Public key     |
 |    0x02  | 2        | Application version                |
-|    0x02  | 1        | Remaining pairing slots            |
+|    0x03  | 1        | Remaining pairing slots            |
 |    0x8d  | 1        | Application Capability             |
 
 
