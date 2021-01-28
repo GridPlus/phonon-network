@@ -183,21 +183,43 @@ Return TLV Data Layout
 |    0x03  | 1        | Remaining pairing slots            |
 |    0x8d  | 1        | Application Capability             |
 
+| Status word |                      Description                                |
+|:------------|:----------------------------------------------------------------|
+|  0x9000     |  Success                                                        |
+
+
 #### INIT
-* CMD: 0xFE
+* CLA : 0x80
+* INS: 0xFE
 * P1: 0x00
 * P2: 0x00
+* LC: 0x26
+* Data : See below
+
+This command Initializes the PIN ( six digit ) and the Secret data ( 32 bytes) for the SecureChannel
 
 Command Data:
-| Field | Length |
-|:------|:-------|
-| Pin | (variable)|
+| Field   |  Length  |
+|:--------|:---------|
+| Pin     | 6 byte   |
+| Secret  | 32 bytes |
+
+Return
+| Status word |                      Description                                |
+|:------------|:----------------------------------------------------------------|
+|  0x9000     |  Success                                                        |
+|  0x6A80     |  Incoming data is not 26 bytes or PIN Value is not all digits   |
+
+
 
 #### IDENTIFY_CARD
 * CLA: 0x80
 * INS: 0x14
 * P1: 0x00
 * P2: 0x00
+* LC: 0x20
+* Data : 32 byte Challenge Salt
+* LE : 0x00
 
 Command Data
 | Field          | Length (Bytes) | 
@@ -205,11 +227,26 @@ Command Data
 | Challenge Salt |    32          |
 
 
+Return TLV Data Layout
+
+|    Tag   |  Length  |            Value                   |
+|:---------|:---------|:-----------------------------------|
+|    0x80  | Variable | Card Public Key + Salt Signature   |
+
+
+| Status word |                      Description                                |
+|:------------|:----------------------------------------------------------------|
+|  0x9000     |  Success                                                        |
+|  0x6984     |  Incoming data is not SHA 256 ( 32 bytes)                       |
+
+
 Response Data
 | Field          | Length (Bytes) | 
 |:---------------|:---------------|
 | Card Identity Pub Key |  65     |
 | Challenge Salt Signature |   72 - 74? | 
+
+
    
 #### LOAD_CERT
 TBD
