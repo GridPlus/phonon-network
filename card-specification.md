@@ -141,10 +141,13 @@ Response Data:
 Empty. Successful response status code (0x9000) means PIN initialization was successful.
 
 #### SELECT
-* CLA: 0x00
-* INS: 0xA4 
+* CLA: 00
+* INS: A4
 * P1: 0x04
 * P2: 0x00
+* LC :  8
+* Data : A0 00 00 08 20 00 03 01
+* LE : 00
 
 Command Data:
 | Field | Length    |
@@ -155,22 +158,40 @@ PhononAID: {0xA0, 0x00, 0x00, 0x08, 0x20, 0x00, 0x03, 0x01}
 
 Response changes depending on whether the card has been initialized with a pin or not. 
 
-Initialized Response Data:
-| Field           | Length |
-|:----------------|:-------|
-| Format Tag 0xA4 | 1 |
-| Instance UID    | 16 |
-| Secure Channel ECC PubKey | 65 | 
-| Application Version | 2 |
-| Number of remaining pairing slots | 1 | 
-| Capabilities Byte | 1 | 
+If Card PIN is not initialized:
+Response Data TLV string:
 
-Uninitialized Response Data: 
-Initialized Response Data:
-| Field           | Length |
-|:----------------|:-------|
-| Format Tag 0x80 | 1 |
-| Secure Channel ECC PubKey    | 65 |
+|    Tag   |  Length  |            Value                |
+|:---------|:---------|:--------------------------------|
+|    0x80  | Variable | Card Secure Channel Public key  |
+
+
+If the card PIN is already initialized: 
+Response Data TLV string:
+
+|    Tag   |  Length  |            Value                   |
+|:---------|:---------|:-----------------------------------|
+|    0xa4  | Variable | return data in TLV Data Structure  |
+
+Return TLV Data Layout
+
+|    Tag   |  Length  |            Value                   |
+|:---------|:---------|:-----------------------------------|
+|    0x8f  | 16       | Card UID                           |
+|    0x80  | Variable | Card Secure Channel Public key     |
+|    0x02  | 2        | Application version                |
+|    0x03  | 1        | Remaining pairing slots            |
+|    0x8d  | 1        | Application Capability             |
+
+#### INIT
+* CMD: 0xFE
+* P1: 0x00
+* P2: 0x00
+
+Command Data:
+| Field | Length |
+|:------|:-------|
+| Pin | (variable)|
 
 #### IDENTIFY_CARD
 * CLA: 0x80
