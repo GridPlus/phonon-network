@@ -311,7 +311,7 @@ Command Data:
 Response Data:
 |    Tag   |  Length  |            Value                   |
 |:---------|:---------|:-----------------------------------|
-|    0x80  | 65       | Phonon Public Key                  |
+|    0x80  | 65       | Phonon ECC Public Key                  |
 
 The create phonon command asks the card to generate a public key and store it in the card's list of phonons. The card returns this public key to the terminal. After the terminal takes this public key and assigns a phonon to it, SET_DESCRIPTOR will be used to define additional data associated with this phonon's public key.
 
