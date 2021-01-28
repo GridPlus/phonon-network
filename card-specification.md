@@ -174,7 +174,7 @@ Return TLV Data Layout
 
 
 #### INIT
-* CLA : 0x00
+* CLA : 0x80
 * INS: 0xFE
 * P1: 0x00
 * P2: 0x00
@@ -199,7 +199,7 @@ Return
 
 
 #### IDENTIFY_CARD
-* CLA: 0x00
+* CLA: 0x80
 * INS: 0x14
 * P1: 0x00
 * P2: 0x00
