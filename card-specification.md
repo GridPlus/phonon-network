@@ -76,7 +76,7 @@ Sender Card                                   TERMINAL                          
 | :::::::::::::::::::::::::::::::::::::::: OPEN_CHANNEL :::::::::::::::::::::::::::::::::::::::::         |
 | <---------------------------------------INIT_CARD_PAIRING                                               |
 | senderSalt := random()                                                                                  |
-| (senderCert, senderPub, senderSalt)-->CARD_PAIR---------------------------------------------->          |                                             
+| (senderCert, senderPub, senderSalt)-->CARD_PAIR---------------------------------------------->          |                                       
 |                                                                      GRIDPLUS_CA_KEY.verify(senderCert) |
 |                                                                                receiverSalt := random() |
 |                                                                ecdhSec := ECDH(senderPub, receiverPriv) |
@@ -105,15 +105,16 @@ TODO: Add details/links to ISO-7816 and other relevant PHY protocol resources.
 The following table contains the full list of supported commands. [Section 3.2](#32-data-format) details the data format of each command and response APDU.
 
 ### 3.1 Command Table
-| Name            | CMD_ID   | Description |
+| Name            | CMD_INS   | Description |
 |:----------------|:---------|:------------|
 | [SELECT](#select)                   | 0xA4 | Instruct the secure element to select and load the Phonon applet for use. |
 | [IDENTIFY_CARD](#identify_card)     | 0x14 | Send a challenge salt to the card, receive back the card's identity pubkey and a signature proving it's possession of the private key  |
 | [LOAD_CERT](#load_cert)             | 0x15 | Load a certificate to validate the card's public key has been signed by the Gridplus CA |
 | [INIT](#init)                       | 0xFE | Initialize a new card by setting the pin |
-| [OPEN_CHANNEL](#open_channel)       | TBD | Open a secure channel with the card. |
-| [MUTUAL_AUTH](#mutual_auth)         | TBD | Mutually authenticate a newly created channel. |
-| [VERIFY_PIN](#verify_pin)           | TBD | Verify the user's PIN to unlock the card for use. |
+| [PAIR](#pair)                       | 0x12 | Pair a card to a terminal by exchanging ECDH secrets and having the terminal verify a GridPlus signature on the card | 
+| [OPEN_CHANNEL](#open_channel)       | 0x10 | Open a secure channel with the card. |
+| [MUTUAL_AUTH](#mutual_auth)         | 0x11 | Mutually authenticate a newly created channel. |
+| [VERIFY_PIN](#verify_pin)           | 0x20 | Verify the user's PIN to unlock the card for use. |
 | [LIST_PHONONS](#list_phonons)       | TBD | Iterate the full list of phonons, returning 'N' phonons at a time. Optional list filters may be applied. |
 | [CREATE_PHONON](#create_phonons)    | TBD | Create an empty phonon and return its public key. This phonon will be unspendable until a descriptor has been set. |
 | [SET_DESCRIPTOR](#set_descriptors)  | TBD | Finalize a newly created phonon, by setting a descriptor with details about the asset it encumbers. |
@@ -125,6 +126,20 @@ The following table contains the full list of supported commands. [Section 3.2](
 ### 3.2 Data Format
 The following sections describe the data format of each command and the card's response to that command.
 
+#### INIT
+* CLA: 0x80
+* INS: 0xFE
+* P1: 0x00
+* P2: 0x00
+
+Command Data:
+| Field | Length |
+|:------|:-------|
+| Pin   | 6      |
+
+Response Data: 
+Empty. Successful response status code (0x9000) means PIN initialization was successful.
+
 #### SELECT
 * CLA: 00
 * INS: A4
@@ -135,11 +150,13 @@ The following sections describe the data format of each command and the card's r
 * LE : 00
 
 Command Data:
-```
-+---------------+----------------+
-| RID (5 bytes) | PIX (11 bytes) |
-+---------------+----------------+
-```
+| Field | Length    |
+|:------|:----------|
+| AppletAID | 8     |
+
+PhononAID: {0xA0, 0x00, 0x00, 0x08, 0x20, 0x00, 0x03, 0x01}
+
+Response changes depending on whether the card has been initialized with a pin or not. 
 
 If Card PIN is not initialized:
 Response Data TLV string:
@@ -171,8 +188,6 @@ Return TLV Data Layout
 |  0x9000     |  Success                                                        |
 
 
-
-
 #### INIT
 * CLA : 0x80
 * INS: 0xFE
@@ -194,7 +209,6 @@ Return
 |:------------|:----------------------------------------------------------------|
 |  0x9000     |  Success                                                        |
 |  0x6A80     |  Incoming data is not 26 bytes or PIN Value is not all digits   |
-
 
 
 
@@ -237,26 +251,87 @@ Response Data
 #### LOAD_CERT
 TBD
 
+#### PAIR 
+* CLA: 0x80
+* INS: 0x12
+* P1: 0x00 for Step 1, 0x01 for Step2 
+* P2: 0x00
+
+Step 1 Command Data: 
+| Field          | Length (Bytes) | 
+|:---------------|:---------------|
+| Client Salt |  32     |
+| Uncompressed Pairing Pub Key |   65 | 
+
+Step 1 Response Data: 
+| Field          | Length (Bytes) | 
+|:---------------|:---------------|
+| Card Salt |  32     |
+| Card Cert |    | 
+
+Step 2 Command Data: 
+| Field          | Length (Bytes) | 
+|:---------------|:---------------|
+| Cryptogram     |  32            |
+
+Step 2 Response Data: 
+| Field          | Length (Bytes) | 
+|:---------------|:---------------|
+| Pairing Index  |  1             |
+| Card Salt      | 32             |
+
+Pair is a two step command which establishes the secrets needed for a secure channel between the terminal and a card. In step 1 the terminal sends a generate public key and salt, to which the card sends back a salt, a certificate comprised of the card's identity public key and a GridPlus CA signature on that pubkey, and a signature from that pubkey on the secret generated by combining the terminal's salt with an ecdh secret between the pair of terminal and card pubkeys. The terminal validates that signature is correct and sends back a secret hash combining the original secret with the card's salt. The terminal stores this pairing secret along with an index for the pairing slot on the card. 
+
 #### OPEN_CHANNEL
 Open a secure channel with the card. All phonon operations require messages to be exchanged securely via a secure channel. Thus, this operation must be performed before any phonon operations may be performed.
 > Note: After opening a channel, the terminal must immediately mutually authenticate the channel to finalize its creation.
 
-TODO: Add data format.
+* CLA: 0x80
+* INS: 0x10
+* P1: Pairing Index
+* P2: 0x00
+
+Command Data: 
+| Field          | Length (Bytes) | 
+|:---------------|:---------------|
+| Pairing Public Key  |  32       |
+
+Response Data: 
+| Field          | Length (Bytes) | 
+|:---------------|:---------------|
+|  Secure Channel Salt |  32      |
+|  Init Vector    | 16            |
 
 #### MUTUAL_AUTH
-TODO: Add data format.
+The terminal and card exchange encrypted salts and each confirm that they can successfully decrypt the message.
+
+* CLA: 0x80
+* INS: 0x11
+* P1: 0x00
+* P2: 0x00
+
+Command Data: 
+| Field          | Length (Bytes) | 
+|:---------------|:---------------|
+|     Salt       |       32       |
+
+Response Data: 
+| Field          | Length (Bytes) | 
+|:---------------|:---------------|
+|     Salt       |       32       |
 
 #### VERIFY_PIN
+* CLA: 0x80
+* INS: 0x20
 * P1: 0x00
 * P2: 0x00
 
 Command Data:
-```
-+------------------------------+
-| PIN string (variable length) |
-+------------------------------+
-```
-Response Data
+| Field          | Length (Bytes) | 
+|:---------------|:---------------|
+|     Pin        |       6        |
+
+Response Data:
 Empty. Successful response status code (0x9000) means PIN verification was successful.
 
 #### LIST_PHONONS
