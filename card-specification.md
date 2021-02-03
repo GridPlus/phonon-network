@@ -343,14 +343,21 @@ TODO: Add data format.
 * P1: 0x00
 * P2: 0x00
 
-Command Data: 
+Command Data: None
 
 Response Data:
-|    Tag   |  Length  |            Value                   |
-|:---------|:---------|:-----------------------------------|
-|    0x80  | 65       | Phonon ECC Public Key                  |
+|    Tag   |  Length  |            Value                       |
+|:---------|:---------|:---------------------------------------|
+|    0x40  | 71       | Phonon Key                             |
+|    0x41  |  1       | Phonon Key Index                       |
+|    0x80  | 65       | Phonon ECC Public Key Value            |
 
-The create phonon command asks the card to generate a public key and store it in the card's list of phonons. The card returns this public key to the terminal. After the terminal takes this public key and assigns a phonon to it, SET_DESCRIPTOR will be used to define additional data associated with this phonon's public key.
+| Status word |                      Description                                |
+|:------------|:----------------------------------------------------------------|
+|  0x9000     |  Success                                                        |
+|  0x6A84     |  Phonon table full                                              |
+
+The create phonon command asks the card to generate a public key and store it in the card's list of phonons. The card returns this public key and its index to the terminal. After the terminal takes this public key and assigns a phonon to it, SET_DESCRIPTOR will be used to define additional data associated with this phonon's public key.
 
 #### SET_DESCRIPTOR
 TODO: Add data format.
