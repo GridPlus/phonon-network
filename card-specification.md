@@ -116,7 +116,7 @@ The following table contains the full list of supported commands. [Section 3.2](
 | [MUTUAL_AUTH](#mutual_auth)         | 0x11 | Mutually authenticate a newly created channel. |
 | [VERIFY_PIN](#verify_pin)           | 0x20 | Verify the user's PIN to unlock the card for use. |
 | [LIST_PHONONS](#list_phonons)       | TBD | Iterate the full list of phonons, returning 'N' phonons at a time. Optional list filters may be applied. |
-| [CREATE_PHONON](#create_phonons)    | 0x30 | Create an empty phonon and return its public key. This phonon will be unspendable until a descriptor has been set. |
+| [CREATE_PHONON](#create_phonon)    | 0x30 | Create an empty phonon and return its public key. This phonon will be unspendable until a descriptor has been set. |
 | [SET_DESCRIPTOR](#set_descriptors)  | TBD | Finalize a newly created phonon, by setting a descriptor with details about the asset it encumbers. |
 | [SEND_PHONONS](#send_phonons)       | TBD | Build an encrypted transaction to transfer phonons to another card. |
 | [SET_RECV_LIST](#set_recv-list)     | TBD | Optional receive whitelist, to allow a terminal to pre-approve which phonons should be accepted in a transfer. |
