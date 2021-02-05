@@ -444,11 +444,11 @@ Response Data:
 |    Tag   |  Length  |            Value                       |
 |:---------|:---------|:---------------------------------------|
 |    0x52  | variable | Phonon Collection                      |
-|    0x51  |  82      | n Phonon Descriptions (one for each returned phonon) |
+|    0x51  |  15      | n Phonon Descriptions (one for each returned phonon) |
 |    0x83  |  4       | Phonon Value                           |
 |    0x81  |  2       | Phonon Coin Type                       |
 |    0x41  |  2       | Phonon Key Index                       |
-|    0x80  | 65       | Phonon ECC Public Key Value            |
+
 
 | Status word |                      Description                                |
 |:------------|:----------------------------------------------------------------|
