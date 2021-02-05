@@ -365,9 +365,6 @@ Empty. Successful response status code (0x9000) means PIN verification was succe
 |  0x9000     |  Success                                                        |
 |  0x63cx     |  Pin Failed. x value is remaining tries                         |
 
-#### LIST_PHONONS
-TODO: Add data format.
-
 #### CREATE_PHONON
 * CLA: 0x80
 * INS: 0x30
@@ -413,6 +410,51 @@ No response data.
 |  0x????     |  Key Not Found |
 
 Set descriptor asks the card to set data for a phonon key which describes the blockchain assets that key encumbers.
+
+#### LIST_PHONONS
+* CLA: 0x80
+* INS: 0x32
+* P1: 0x00 or 0x01
+* P2: 0x00, 0x01, 0x02 or 0x03
+
+P1 values control how the card filter behaves, with the values switching on and off which fields the card must pay attention to when filtering.
+
+| P1 Value | Meaning | 
+|:---------|:--------|
+|    0x00  | Ignore currency Type  |
+|    0x01  | Filter on currency Type |
+
+| P2 Value | Meaning | 
+|:---------|:--------|
+|    0x00  | Ignore value filters |
+|    0x01  | Filter on Less Than field only |
+|    0x02  | Filter on Greater Than field only |
+|    0x03  | Filter on Less than and Greater Than Field | 
+
+Command Data: 
+|    Tag   |  Length  |            Value                       |
+|:---------|:---------|:---------------------------------------|
+|    0x60  |          | Phonon Filter                          |
+|    0x81  |  2       | Currency Type                          |
+|    0x84  |  4       | Value Less Than or Equal to            |
+|    0x85  |  4       | Value Greater Than or Equal to 
+
+
+Response Data:
+|    Tag   |  Length  |            Value                       |
+|:---------|:---------|:---------------------------------------|
+|    0x52  | variable | Phonon Collection                      |
+|    0x51  |  15      | n Phonon Descriptions (one for each returned phonon) |
+|    0x83  |  4       | Phonon Value                           |
+|    0x81  |  2       | Phonon Coin Type                       |
+|    0x41  |  2       | Phonon Key Index                       |
+
+
+| Status word |                      Description                                |
+|:------------|:----------------------------------------------------------------|
+|  0x9000     |  Success                                                        |
+
+List phonons requests a collection of phonons from the card which satisfy a given filter subscription. The filter conditions are set using the P1 and P2 values along with command data describing the actual values to filter for. The card will return a list of phonon descriptions matching the filter settings. 
 
 #### SEND_PHONONS
 TODO: Add data format.
