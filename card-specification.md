@@ -430,7 +430,7 @@ Command Data:
 |    Tag   |  Length  |            Value                       |
 |:---------|:---------|:---------------------------------------|
 |    0x60  |          | Phonon Filter                          |
-|    0x81  |  2       | Currency Type                          |
+|    0x81  |  2       | Coin Type                          |
 |    0x84  |  4       | Value Less Than or Equal to            |
 |    0x85  |  4       | Value Greater Than or Equal to 
 
@@ -441,7 +441,7 @@ Response Data:
 |    0x52  | variable | Phonon Collection                      |
 |    0x51  |  15      | n Phonon Descriptions (one for each returned phonon) |
 |    0x83  |  4       | Phonon Value                           |
-|    0x81  |  2       | Phonon Coin Type                       |
+|    0x81  |  2       | Coin Type                       |
 |    0x41  |  2       | Phonon Key Index                       |
 
 
