@@ -414,15 +414,10 @@ Set descriptor asks the card to set data for a phonon key which describes the bl
 #### LIST_PHONONS
 * CLA: 0x80
 * INS: 0x32
-* P1: 0x00 or 0x01
+* P1: CurrencyType Identifier
 * P2: 0x00, 0x01, 0x02 or 0x03
 
-P1 values control how the card filter behaves, with the values switching on and off which fields the card must pay attention to when filtering.
-
-| P1 Value | Meaning | 
-|:---------|:--------|
-|    0x00  | Ignore currency Type  |
-|    0x01  | Filter on currency Type |
+P2 values control how the card filter behaves, with the values switching on and off which fields the card must pay attention to when filtering.
 
 | P2 Value | Meaning | 
 |:---------|:--------|
