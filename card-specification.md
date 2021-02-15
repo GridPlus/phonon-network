@@ -414,7 +414,7 @@ Set descriptor asks the card to set data for a phonon key which describes the bl
 #### LIST_PHONONS
 * CLA: 0x80
 * INS: 0x32
-* P1: CurrencyType Identifier
+* P1: 0x00
 * P2: 0x00, 0x01, 0x02 or 0x03
 
 P2 values control how the card filter behaves, with the values switching on and off which fields the card must pay attention to when filtering.
@@ -430,7 +430,7 @@ Command Data:
 |    Tag   |  Length  |            Value                       |
 |:---------|:---------|:---------------------------------------|
 |    0x60  |          | Phonon Filter                          |
-|    0x81  |  2       | Coin Type                          |
+|    0x81  |  2       | Coin Type                              |
 |    0x84  |  4       | Value Less Than or Equal to            |
 |    0x85  |  4       | Value Greater Than or Equal to 
 
@@ -441,7 +441,7 @@ Response Data:
 |    0x52  | variable | Phonon Collection                      |
 |    0x51  |  15      | n Phonon Descriptions (one for each returned phonon) |
 |    0x83  |  4       | Phonon Value                           |
-|    0x81  |  2       | Coin Type                       |
+|    0x81  |  2       | Coin Type                              |
 |    0x41  |  2       | Phonon Key Index                       |
 
 
