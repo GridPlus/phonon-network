@@ -115,7 +115,8 @@ The following table contains the full list of supported commands. [Section 3.2](
 | [OPEN_CHANNEL](#open_channel)       | 0x10 | Open a secure channel with the card. |
 | [MUTUAL_AUTH](#mutual_auth)         | 0x11 | Mutually authenticate a newly created channel. |
 | [VERIFY_PIN](#verify_pin)           | 0x20 | Verify the user's PIN to unlock the card for use. |
-| [LIST_PHONONS](#list_phonons)       | TBD | Iterate the full list of phonons, returning 'N' phonons at a time. Optional list filters may be applied. |
+| [LIST_PHONONS](#list_phonons)       | 0x32 | Iterate the full list of phonons, returning 'N' phonons at a time. Optional list filters may be applied. |
+| [GET_PHONON_PUB_KEY](#get_phonon_pub_key) | 0x33 | Fetch a phonon's public key by key index |
 | [CREATE_PHONON](#create_phonon)    | 0x30 | Create an empty phonon and return its public key. This phonon will be unspendable until a descriptor has been set. |
 | [SET_DESCRIPTOR](#set_descriptors)  | 0x31 | Finalize a newly created phonon, by setting a descriptor with details about the asset it encumbers. |
 | [SEND_PHONONS](#send_phonons)       | TBD | Build an encrypted transaction to transfer phonons to another card. |
@@ -450,6 +451,29 @@ Response Data:
 |  0x9000     |  Success                                                        |
 
 List phonons requests a collection of phonons from the card which satisfy a given filter subscription. The filter conditions are set using the P1 and P2 values along with command data describing the actual values to filter for. The card will return a list of phonon descriptions matching the filter settings. 
+
+#### GET_PHONON_PUB_KEY
+* CLA: 0x80
+* INS: 0x33
+* P1: 0x00
+* P2: 0x00
+
+Get phonon pub key returns the public key representing the phonon at the specified key index. This is intended to be used after filtering the list returned by list phonons, which omits the public keys in order to save space in the response. 
+
+Command Data: 
+|    Tag   |  Length  |            Value                       |
+|:---------|:---------|:---------------------------------------|
+|    0x41  |  2       | Phonon Key Index                       |
+
+Response Data: 
+|    Tag   |  Length  |            Value                       |
+|:---------|:---------|:---------------------------------------|
+|    0x80  | 65       | Phonon ECC Public Key Value            |
+
+| Status word |                      Description                                |
+|:------------|:----------------------------------------------------------------|
+|  0x9000     |  Success                                                        |
+| ????        |  Key Index Not Found
 
 #### SEND_PHONONS
 TODO: Add data format.
