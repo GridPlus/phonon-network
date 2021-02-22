@@ -414,8 +414,10 @@ Set descriptor asks the card to set data for a phonon key which describes the bl
 #### LIST_PHONONS
 * CLA: 0x80
 * INS: 0x32
-* P1: 0x00
+* P1: 0x00 for initial request, 0x01 to request an extended phonon list
 * P2: 0x00, 0x01, 0x02 or 0x03
+
+P1 can be set to 0x01 to denote that this is a request for the next batch of phonons from an initial list request. This should be set when list phonons returns a status indicating there are additional phonons to return which could not fit in the initial list. When P1 is set the command data will be ignored, since the card has already queued up the phonons which need to be returned in the extended list.
 
 P2 values control how the card filter behaves, with the values switching on and off which fields the card must pay attention to when filtering.
 
@@ -448,6 +450,7 @@ Response Data:
 | Status word |                      Description                                |
 |:------------|:----------------------------------------------------------------|
 |  0x9000     |  Success                                                        |
+| 0x9XXX | Success with extended list. XXX encodes the number of additional phonons left to be returned in a followup LIST_PHONONS request |
 
 List phonons requests a collection of phonons from the card which satisfy a given filter subscription. The filter conditions are set using the P1 and P2 values along with command data describing the actual values to filter for. The card will return a list of phonon descriptions matching the filter settings. 
 
