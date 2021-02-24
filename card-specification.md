@@ -399,15 +399,15 @@ Command Data:
 |    0x50  |  15      | Phonon Descriptor                      |
 |    0x41  |  2       | Phonon Key Index                       |
 |    0x81  |  2       | Currency Type                          |
-|    0x83  |  4       | Value     |                             
+|    0x83  |  4       | Value                                  |                             
 
 Response Data:
 No response data.
 
-| Status word |                      Description                                |
-|:------------|:----------------------------------------------------------------|
-|  0x9000     |  Success                                                        |
-|  0x????     |  Key Not Found |
+| Status word |                      Description          |
+|:------------|:------------------------------------------|
+|  0x9000     |  Success                                  |
+|  0x????     |  Key Not Found                            |
 
 Set descriptor asks the card to set data for a phonon key which describes the blockchain assets that key encumbers.
 
@@ -436,13 +436,13 @@ Command Data:
 
 
 Response Data:
-|    Tag   |  Length  |            Value                       |
-|:---------|:---------|:---------------------------------------|
-|    0x52  | variable | Phonon Collection                      |
+|    Tag   |  Length  |                   Value                              |
+|:---------|:---------|:-----------------------------------------------------|
+|    0x52  | variable | Phonon Collection                                    |
 |    0x51  |  15      | n Phonon Descriptions (one for each returned phonon) |
-|    0x83  |  4       | Phonon Value                           |
-|    0x81  |  2       | Coin Type                              |
-|    0x41  |  2       | Phonon Key Index                       |
+|    0x83  |  4       | Phonon Value                                         |
+|    0x81  |  2       | Coin Type                                            |
+|    0x41  |  2       | Phonon Key Index                                     |
 
 
 | Status word |                      Description                                |
