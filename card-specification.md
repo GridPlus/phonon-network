@@ -402,6 +402,14 @@ Command Data:
 |    0x81  |  2       | Currency Type                          |
 |    0x83  |  4       | Value                                  |                             
 
+Currency Types Value Table: 
+|   Currency         | Code    |
+|:-------------------|:--------|
+|  Not Set (Default) | 0x0000  |
+| Bitcoin            | 0x0001  |
+| Ethereum           | 0x0002  |
+
+
 Response Data:
 No response data.
 
@@ -410,7 +418,7 @@ No response data.
 |  0x9000     |  Success                                  |
 |  0x????     |  Key Not Found                            |
 
-Set descriptor asks the card to set data for a phonon key which describes the blockchain assets that key encumbers.
+Set descriptor asks the card to set data for a phonon key which describes the blockchain assets that key encumbers. Once set, a descriptor cannot be modified again. 
 
 #### LIST_PHONONS
 * CLA: 0x80
