@@ -119,10 +119,11 @@ The following table contains the full list of supported commands. [Section 3.2](
 | [GET_PHONON_PUB_KEY](#get_phonon_pub_key) | 0x33 | Fetch a phonon's public key by key index |
 | [CREATE_PHONON](#create_phonon)    | 0x30 | Create an empty phonon and return its public key. This phonon will be unspendable until a descriptor has been set. |
 | [SET_DESCRIPTOR](#set_descriptors)  | 0x31 | Finalize a newly created phonon, by setting a descriptor with details about the asset it encumbers. |
+| [DESTROY_PHONON](#destroy_phonon) | 0x34 | Destroy a phonon to export its private key. |
 | [SEND_PHONONS](#send_phonons)       | TBD | Build an encrypted transaction to transfer phonons to another card. |
 | [SET_RECV_LIST](#set_recv-list)     | TBD | Optional receive whitelist, to allow a terminal to pre-approve which phonons should be accepted in a transfer. |
 | [RECV_PHONONS](#recv_phonons)       | TBD | Process and receive an encrypted transaction, containing a transfer of some phonons. |
-| [DESTROY_PHONONS](#destroy_phonons) | TBD | Destroy a phonon to export its private key. |
+
 
 ### 3.2 Data Format
 The following sections describe the data format of each command and the card's response to that command.
@@ -486,6 +487,30 @@ Response Data:
 |  0x9000     |  Success                                                        |
 | ????        |  Key Index Not Found
 
+#### DESTROY_PHONON
+* CLA: 0x80
+* INS: 0x34
+* P1: 0x00
+* P2: 0x00
+
+Destroy a phonon and export it's private key. 
+
+
+Command Data: 
+|    Tag   |  Length  |            Value                       |
+|:---------|:---------|:---------------------------------------|
+|    0x41  |  2       | Phonon Key Index                       |
+
+Response Data: 
+|    Tag   |  Length  |            Value                       |
+|:---------|:---------|:---------------------------------------|
+|    0x81  | 65       | Phonon ECC Private Key Value          |
+
+| Status word |                      Description                                |
+|:------------|:----------------------------------------------------------------|
+|  0x9000     |  Success                                                        |
+| ????        |  Key Index Not Found
+
 #### SEND_PHONONS
 TODO: Add data format.
 
@@ -495,6 +520,5 @@ TODO: Add data format.
 #### RECV_PHONONS
 TODO: Add data format.
 
-#### DESTOY_PHONONS
-TODO: Add data format.
+
 
