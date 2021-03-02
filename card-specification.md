@@ -120,7 +120,7 @@ The following table contains the full list of supported commands. [Section 3.2](
 | [CREATE_PHONON](#create_phonon)    | 0x30 | Create an empty phonon and return its public key. This phonon will be unspendable until a descriptor has been set. |
 | [SET_DESCRIPTOR](#set_descriptors)  | 0x31 | Finalize a newly created phonon, by setting a descriptor with details about the asset it encumbers. |
 | [DESTROY_PHONON](#destroy_phonon) | 0x34 | Destroy a phonon to export its private key. |
-| [SEND_PHONONS](#send_phonons)       | TBD | Build an encrypted transaction to transfer phonons to another card. |
+| [SEND_PHONONS](#send_phonons)       | 0x35 | Build an encrypted transaction to transfer phonons to another card. |
 | [SET_RECV_LIST](#set_recv-list)     | TBD | Optional receive whitelist, to allow a terminal to pre-approve which phonons should be accepted in a transfer. |
 | [RECV_PHONONS](#recv_phonons)       | TBD | Process and receive an encrypted transaction, containing a transfer of some phonons. |
 
@@ -451,7 +451,7 @@ Response Data:
 |    Tag   |  Length  |                   Value                              |
 |:---------|:---------|:-----------------------------------------------------|
 |    0x52  | variable | Phonon Collection                                    |
-|    0x51  |  15      | n Phonon Descriptions (one for each returned phonon) |
+|    0x50  |  15      | n Phonon Descriptions (one for each returned phonon) |
 |    0x83  |  4       | Phonon Value                                         |
 |    0x81  |  2       | Coin Type                                            |
 |    0x41  |  2       | Phonon Key Index                                     |
@@ -480,6 +480,8 @@ Command Data:
 Response Data: 
 |    Tag   |  Length  |            Value                       |
 |:---------|:---------|:---------------------------------------|
+|    0x43  | Variable | Transfer Phonon Packet                 |
+|    0x44  |          | Phonon Complete Description  
 |    0x80  | 65       | Phonon ECC Public Key Value            |
 
 | Status word |                      Description                                |
@@ -512,7 +514,37 @@ Response Data:
 | ????        |  Key Index Not Found
 
 #### SEND_PHONONS
-TODO: Add data format.
+* CLA: 0x80
+* INS: 0x35
+* P1: 0x00 for initial request, 0x01 to request an extended transfer packet
+* P2: 0x00 for single send request, 0x01 if the request needs to be repeated to provide the full list of phonon packets. The card is expected to wait until a final request with 0x00 is sent, and then compile all requested phonons into a single response. 
+
+Instructs a card to construct a packet of private phonon descriptions, consisting of a private key along with value and currency type, and encrypt it with the public key provided. If all of the requested phonons cannot fit within one response, the response will return a status value > 0x9000 to indicate how many phonons remain, and the caller must repeat the request with P1 set to 0x01 to receive the additional response data until 0x9000 is returned. 
+
+The public key must have previously been validated as a signed GridPlus public key when the card to card secure channel was established. 
+
+Command Data: 
+|    Tag   |  Length  |            Value                       |
+|:---------|:---------|:---------------------------------------|
+|    0x80  | Variable | Card Secure Channel Public key         |
+|    0x42  | Variable | Phonon Key Index List                  |
+|    0x41  |  2       | N Phonon Key Index entries             |
+
+Response Data: 
+|    Tag   |  Length  |            Value                       |
+|:---------|:---------|:---------------------------------------|
+|    0x43  | Variable | Phonon Transfer Packet                 |
+|    0x44  | N * 77   | N Phonon Private Descriptions          |
+|    0x81  | 65       | Phonon ECC Private Key Value           |
+|    0x83  |  4       | Phonon Value                                         |
+|    0x81  |  2       | Coin Type                                            |
+
+
+| Status word |                      Description                                |
+|:------------|:----------------------------------------------------------------|
+|  0x9000     |  Success                                                        |
+| 0x9XXX | Success with extended list. XXX encodes the number of additional phonons left to be returned in a followup LIST_PHONONS request |
+
 
 #### SET_RECV_LIST
 TODO: Add data format.
