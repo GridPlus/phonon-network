@@ -534,10 +534,10 @@ Response Data:
 |    Tag   |  Length  |            Value                       |
 |:---------|:---------|:---------------------------------------|
 |    0x43  | Variable | Phonon Transfer Packet                 |
-|    0x44  | N * 77   | N Phonon Private Descriptions          |
-|    0x81  | 65       | Phonon ECC Private Key Value           |
-|    0x83  |  4       | Phonon Value                                         |
-|    0x81  |  2       | Coin Type                                            |
+|    0x44  | N * 44   | N Phonon Private Descriptions          |
+|    0x81  |  32      | Phonon ECC Private Key Value           |
+|    0x83  |  4       | Phonon Value                           |
+|    0x81  |  2       | Coin Type                              |
 
 
 | Status word |                      Description                                |
