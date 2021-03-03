@@ -506,7 +506,7 @@ Command Data:
 Response Data: 
 |    Tag   |  Length  |            Value                       |
 |:---------|:---------|:---------------------------------------|
-|    0x81  | 65       | Phonon ECC Private Key Value          |
+|    0x81  | 32       | Phonon ECC Private Key Value          |
 
 | Status word |                      Description                                |
 |:------------|:----------------------------------------------------------------|
