@@ -526,15 +526,14 @@ The public key must have previously been validated as a signed GridPlus public k
 Command Data: 
 |    Tag   |  Length  |            Value                       |
 |:---------|:---------|:---------------------------------------|
-|    0x80  | Variable | Card Secure Channel Public key         |
 |    0x42  | Variable | Phonon Key Index List                  |
 |    0x41  |  2       | N Phonon Key Index entries             |
 
 Response Data: 
 |    Tag   |  Length  |            Value                       |
 |:---------|:---------|:---------------------------------------|
-|    0x43  | Variable | Phonon Transfer Packet                 |
-|    0x44  | N * 44   | N Phonon Private Descriptions          |
+|    0x43  | N * 46   | Phonon Transfer Packet                 |
+|    0x44  |  44      | N Phonon Private Descriptions          |
 |    0x81  |  32      | Phonon ECC Private Key Value           |
 |    0x83  |  4       | Phonon Value                           |
 |    0x81  |  2       | Coin Type                              |
