@@ -517,17 +517,19 @@ Response Data:
 * CLA: 0x80
 * INS: 0x35
 * P1: 0x00 for initial request, 0x01 to request an extended transfer packet
-* P2: 0x00 for single send request, 0x01 if the request needs to be repeated to provide the full list of phonon packets. The card is expected to wait until a final request with 0x00 is sent, and then compile all requested phonons into a single response. 
+* P2: 0x00 Number of phonons request
 
 Instructs a card to construct a packet of private phonon descriptions, consisting of a private key along with value and currency type, and encrypt it with the public key provided. If all of the requested phonons cannot fit within one response, the response will return a status value > 0x9000 to indicate how many phonons remain, and the caller must repeat the request with P1 set to 0x01 to receive the additional response data until 0x9000 is returned. 
 
 The public key must have previously been validated as a signed GridPlus public key when the card to card secure channel was established. 
 
+The Phonon Key Index List is an array of 2 byte key indices. 
+
 Command Data: 
 |    Tag   |  Length  |            Value                       |
 |:---------|:---------|:---------------------------------------|
-|    0x42  | Variable | Phonon Key Index List                  |
-|    0x41  |  2       | N Phonon Key Index entries             |
+|    0x42  | N * 2    | Phonon Key Index List                  |
+
 
 Response Data: 
 |    Tag   |  Length  |            Value                       |
