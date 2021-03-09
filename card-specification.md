@@ -551,7 +551,30 @@ Response Data:
 TODO: Add data format.
 
 #### RECV_PHONONS
-TODO: Add data format.
+* CLA: 0x80
+* INS: 0x36
+* P1: 0x00
+* P2: 0x00
+
+Counterpart to SEND_PHONONS, this command instructs a card to receive a phonon transfer packet received from another card's SEND_PHONONS response. This packet is encrypted to the receiving card's public key by a previous card to card secure channel request. The receiving card decrypts the packet and stores the contained phonons along with their descriptions. 
+
+Command Data: 
+|    Tag   |  Length  |            Value                       |
+|:---------|:---------|:---------------------------------------|
+|    0x43  | N * 46   | Phonon Transfer Packet                 |
+|    0x44  |  44      | N Phonon Private Descriptions          |
+|    0x81  |  32      | Phonon ECC Private Key Value           |
+|    0x83  |  4       | Phonon Value                           |
+|    0x81  |  2       | Coin Type                              |
+
+
+Response Data: 
+No Response Data, just Status Code
+
+
+| Status word |                      Description                                |
+|:------------|:----------------------------------------------------------------|
+|  0x9000     |  Success                                                        |
 
 
 
