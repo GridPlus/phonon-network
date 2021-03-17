@@ -122,7 +122,7 @@ The following table contains the full list of supported commands. [Section 3.2](
 | [DESTROY_PHONON](#destroy_phonon) | 0x34 | Destroy a phonon to export its private key. |
 | [SEND_PHONONS](#send_phonons)       | 0x35 | Build an encrypted transaction to transfer phonons to another card. |
 | [SET_RECV_LIST](#set_recv-list)     | TBD | Optional receive whitelist, to allow a terminal to pre-approve which phonons should be accepted in a transfer. |
-| [RECV_PHONONS](#recv_phonons)       | TBD | Process and receive an encrypted transaction, containing a transfer of some phonons. |
+| [RECV_PHONONS](#recv_phonons)       | 0x36 | Process and receive an encrypted transaction, containing a transfer of some phonons. |
 
 
 ### 3.2 Data Format
