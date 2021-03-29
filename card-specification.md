@@ -121,7 +121,7 @@ The following table contains the full list of supported commands. [Section 3.2](
 | [SET_DESCRIPTOR](#set_descriptors)  | 0x31 | Finalize a newly created phonon, by setting a descriptor with details about the asset it encumbers. |
 | [DESTROY_PHONON](#destroy_phonon) | 0x34 | Destroy a phonon to export its private key. |
 | [SEND_PHONONS](#send_phonons)       | 0x35 | Build an encrypted transaction to transfer phonons to another card. |
-| [SET_RECV_LIST](#set_recv-list)     | TBD | Optional receive whitelist, to allow a terminal to pre-approve which phonons should be accepted in a transfer. |
+| [SET_RECV_LIST](#set_recv-list)     | 0x37 | Optional receive whitelist, to allow a terminal to pre-approve which phonons should be accepted in a transfer. |
 | [RECV_PHONONS](#recv_phonons)       | 0x36 | Process and receive an encrypted transaction, containing a transfer of some phonons. |
 
 
@@ -548,7 +548,25 @@ Response Data:
 
 
 #### SET_RECV_LIST
-TODO: Add data format.
+* CLA: 0x80
+* INS: 0x37
+* P1: 0x00
+* P2: 0x00
+
+Sends a receiving card a list of phonon public keys which the terminal has validated as legitimate phonons. This allows the card to check that these are in fact the keys received during the subsequent RECV_PHONONS command. Protects against a malicious or malfunctioning remote terminal and/or card which attempts to send keys which do not actually correspond to phonon accessible assets on chain. 
+
+Multiple packets may be sent in succession to cover a long list of phonons. All phonons sent in the receive list should be valid for the duration of the session. 
+ 
+Command Data: 
+|    Tag   |  Length  |            Value                       |
+|:---------|:---------|:---------------------------------------|
+|    0x7F  | variable | Phonon Pub Key List (Contains N Phonon Public Keys) |
+|    0x80  | 65       | N Phonon ECC Public Key Values         |
+
+| Status word |                      Description                                |
+|:------------|:----------------------------------------------------------------|
+|  0x9000     |  Success                                                        |
+
 
 #### RECV_PHONONS
 * CLA: 0x80
