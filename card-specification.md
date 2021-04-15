@@ -123,6 +123,10 @@ The following table contains the full list of supported commands. [Section 3.2](
 | [SEND_PHONONS](#send_phonons)       | 0x35 | Build an encrypted transaction to transfer phonons to another card. |
 | [SET_RECV_LIST](#set_recv_list)     | 0x37 | Optional receive whitelist, to allow a terminal to pre-approve which phonons should be accepted in a transfer. |
 | [RECV_PHONONS](#recv_phonons)       | 0x36 | Process and receive an encrypted transaction, containing a transfer of some phonons. |
+| [INIT_CARD_PAIRING](#init_card_pairing | 0x38 | Initiate a card to card secure pairing. | 
+| [CARD_PAIR]                  | 0x39 |  Exchange the pairing initation data from INIT_CARD_PAIRING with the card to be paired. |
+| [CARD_PAIR_2]                | 0x40 | Exchange the returned pairing data from CARD_PAIR with the initiating card. |
+| [FINALIZE_CARD_PAIRING]      | 0x41 | Return the pairing info and initial card's signature on the session key to finalize the pairing. |
 
 
 ### 3.2 Data Format
