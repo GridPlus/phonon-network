@@ -76,18 +76,18 @@ Sender Card                                   TERMINAL                          
 | :::::::::::::::::::::::::::::::::::::::: OPEN_CHANNEL :::::::::::::::::::::::::::::::::::::::::         |
 | <---------------------------------------INIT_CARD_PAIRING                                               |
 | senderSalt := random()                                                                                  |
-| (senderCert, senderPub, senderSalt)-->CARD_PAIR---------------------------------------------->          |                                       
+| (senderCert, senderPub, senderSalt)---->CARD_PAIR---------------------------------------------->        |                                       
 |                                                                      GRIDPLUS_CA_KEY.verify(senderCert) |
-|                                                                                receiverSalt := random() |
 |                                                                ecdhSec := ECDH(senderPub, receiverPriv) |
 |                                                              sessionKey := sha512(senderSalt | ecdhSec) |
+|                                                               (encryptKey, macKey) := split(sessionKey) |  
 |                                                                                       aesIV := random() |
 |                                                       channel := new_channel(encryptKey, macKey, aesIV) |
 |                                            receiverSig := receiverPriv.sign(sha256(sessionKey | aesIV)) |
-| <--------------------------CARD_PAIR_2<---(receiverCert, receiverPub, receiverSalt, aesIV, receiverSig) |
+| <---------------------------------------CARD_PAIR_2<----(receiverCert, receiverPub, aesIV, receiverSig) |
 | GRIDPLUS_CA_KEY.verify(receiverCert)                                                                    |
 | ecdhSec := ECDH(receiverPub, senderPriv)                                                                |
-| sessionKey := sha512(receiverSalt | ecdhSec)                                                            |
+| sessionKey := sha512(senderSalt | ecdhSec)                                                              |
 | receiverPub.verify(receiverSig, sha256(sessionKey | aesIV))                                             |
 | senderSig := senderSig.sign(sha256(sessionKey | aesIV))                                                 |  
 | (encryptKey, macKey) := split(sessionKey)                                                               |       
