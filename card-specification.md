@@ -68,7 +68,7 @@ Terminal                                                                   Card
 |                                                                              |
 ```
 
-Card to Card Secure Channel
+### Card to Card Secure Channel
 ```
 Sender Card                                   TERMINAL                              Receiver Card
 ========                                       ======                                =============
@@ -606,10 +606,10 @@ No Response Data, just Status Code
 
 Initializes a card pairing, requesting that the first card contacted in the pairing (henceforth known as the sender) generate a salt and send back its GridPlus CA signed certificate as well as the certificate public key. This must be the signed certificate's public key, and not an ephemeral public key, or else a malicious terminal could substitute the public key for it's own in order to impersonate the card. 
 
+Card pairings should be delineated from terminal secure channel pairings, as they are used to enable encrypted retrieval of phonon private keys, which are unsafe to retrieve if the card is paired with any entity besides a validated GridPlus Phonon Card (for example a terminal.) 
+
 Command Data: 
-
-
-
+None
 
 Response Data: 
 |    Tag   |  Length  |            Value                       |
@@ -628,7 +628,15 @@ Response Data:
 * P1: 0x00
 * P2: 0x00
 
-Relays the INIT_CARD_PAIRING data from the sender card to the receiver card. The receiver card then verifies the sending card's certificate has been signed by GridPlus and computes the ECDH secret and session key using the sender's public key and salt, in combination with its card certificate private key. Once computed, the receiver card should sign the session key with its certificate private key, in order to prove ownership of the keypair to the sender card. It should also generate an aes init vector (aesIV) and use it along with the function `split(sha512(senderSalt | sessionKey))` to generate an `(encryptKey, macKey)` pair to prepare a secure AES-GCM channel.   
+Relays the INIT_CARD_PAIRING data from the sender card to the receiver card. The Receiver Card performs the following procedure to validate the Sender's identity as a GridPlus Phonon Card and to establish a secure channel with the sender. (Shown in (#Card To Card Secure Channel) 
+
+1. Verify the Sender Card Certificate has been signed by the GridPlus CA Key. An error here should abort the establishment of the channel. 
+2. Compute an ECDH secret with the Sender Public Key and the Receiver Private Key 
+3. Compute the SHA-512 checksum of Sender Salt appended with the ECDH secret. `sessionKey := sha512(senderSalt | ecdhSec)`
+4. Split the session key in half to derive an Encryption Key and a MAC. `(encryptKey, macKey) := split(sessionKey)`
+5. Generate a random AES Init Vector (aesIV)
+6. Initiate an AES channel with the Encryption Key, MAC, and aesIV. `channel := new_channel(encryptKey, macKey, aesIV)`
+7. Create a signature with the Receiver Certificate Private Key on data known to the sender, in this case the sha256 of the session key appended with the AES init vector. (TBD, this may be redundant pending review of Card to Card Secure Channel Corrections PR)
 
 
 Command Data: 
@@ -648,12 +656,11 @@ Response Data:
 
 #### CARD_PAIR_2
 * CLA: 0x80
-* INS: 0x50
+* INS: 0x52
 * P1: 0x00
 * P2: 0x00
 
-Relays the INIT_CARD_PAIRING data from the sender card to the receiver card. The receiver card then verifies the sending card's certificate has been signed by GridPlus and computes the ECDH secret and session key using the sender's public key and salt, in combination with its card certificate private key. Once computed, the receiver card should sign the session key with its certificate private key, in order to prove ownership of the keypair to the sender card. It should also generate an aes init vector (aesIV) and use it along with the function `split(sha512(senderSalt | sessionKey))` to generate an `(encryptKey, macKey)` pair to prepare a secure AES-GCM channel.   
-
+Relays the Receiver Card's response to CARD_PAIR to the Sender Card. The Sender performs the same validation and session key establishment sequence as the Receiver Card performed in CARD_PAIR, except it uses the Receiver's aesIV instead of generating its own. 
 
 Command Data: 
 |    Tag   |  Length  |            Value                       |
@@ -666,10 +673,15 @@ Command Data:
 Response Data: 
 |    Tag   |  Length  |            Value                       |
 |:---------|:---------|:---------------------------------------|
-|          |          | Receiver Card Certificate              |
-|          |          | Receiver Public Key                    | 
-|          |          | aesIV                                  |
-|          |          | receiver Sig                           |
+|          |          | Sender Sig                             |
+|          |          | Sender Pairing Idx                     |
+
+#### FINALIZE_PAIRING
+ * CLA: 0x80
+* INS: 0x53
+* P1: 0x00
+* P2: 0x00
+
 
 
 
