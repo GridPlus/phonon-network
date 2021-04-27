@@ -21,6 +21,8 @@ After the card session has been successfully started, all commands will be encry
 Opening a secure channel involves checking that the card has a valid signed certificate from GridPlus and agreeing on secure channel keys via a Diffie-Hellman key exchange. To achieve forward secrecy and prevent command replays, the secure channel keys will rotate deterministically after each message.
 
 The command sequence to begin a card session is illustrated below:
+
+Phonon proposed Card to Terminal Secure Channel (Not implemented)
 ```
 Terminal                                                                   Card
 ========                                                                  ======
@@ -67,6 +69,47 @@ Terminal                                                                   Card
 | success := channel.decrypt(encrypted)                                        |
 |                                                                              |
 ```
+Safecard Card to Terminal Secure Channel (Implemented)
+Terminal                                                                   Card
+========                                                                  ======
+| :::::::::::::::::::::::::::::::::: SELECT :::::::::::::::::::::::::::::::::: |
+| Select --------------------------------------------------------------------> |
+|                                     cardEphemPriv, cardEphemPub := gen_key() |
+| <------------------------------------------------(instanceUID, cardEphemPub) |
+| (clientPriv, clientPub) := gen_key()                                         |
+| secret = ECDH(clientPriv, cardEphemPub)                                      |
+| ::::::::::::::::::::::::::::::::::: PAIR ::::::::::::::::::::::::::::::::::: |
+| clientSalt := random()
+| (clientPairPriv, clientPairPub) := gen_key()
+| PAIR_STEP_1(clientSalt, clientPairPub)-------------------------------------> |
+|                                     //Card creates signature over ECDH Secret
+|                                      //Fill in rest of card side of pairing |
+| <--------------------------------(cardCertificate, cardPairingSig, cardSalt) |
+| cardIDPubKey := parseCertificate(cardCertificate)
+| validateECCPubKey(cardIDPubKey)
+| pairingEcdhSecret := ECDH(pairingPrivKey, cardIDPubKey)
+| pairingSecret := sha256(clientSalt | pairingEcdhSecret)
+| cardIDPubKey.verify(cardPairingSig, pairingSecret)
+| cryptogram := sha256(cardSalt, pairingSecret)
+| PAIR_STEP_2(cryptogram)----------------------------------------------------> |
+| <-------------------------------------------------(cardSalt2?, pairingIndex) |
+| pairingKey := sha256(cardSalt2, pairingSecret)                               |
+| SetPairingInfo(pairingIndex, pairingKey)                                     |
+
+| :::::::::::::::::::::::::::: OPEN_SECURE_CHANNEL ::::::::::::::::::::::::::: |
+| (pairingIndex, clientPub)--------------------------------------------------> |
+|                                            //TODO: Fill in rest of card side |
+| <---------------------------------------------------------(cardSalt3, aesIV) | 
+|                                                                              |
+| (encryptKey, macKey) := split(sha512(secret | pairingKey | cardSalt3)        | 
+| :::::::::::::::::::::::::::::::: MUTUAL_AUTH ::::::::::::::::::::::::::::::: |
+|                                                                              |
+| challenge := random(32)                                                      |
+| SECURE_CHANNEL_ENCRYPTED(clientChallenge)----------------------------------> |
+|                                                         VerifyMAC(challenge) |
+|                                                    cardChallenge := random() | 
+| <----------------------------------------SECURE_CHANNEL_ENCRYPTED(challenge) |
+| VerifyMAC(challenge
 
 Card to Card Secure Channel
 ```
