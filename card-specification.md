@@ -76,18 +76,19 @@ Sender Card                                   TERMINAL                          
 | :::::::::::::::::::::::::::::::::::::::: OPEN_CHANNEL :::::::::::::::::::::::::::::::::::::::::         |
 | <---------------------------------------INIT_CARD_PAIRING                                               |
 | senderSalt := random()                                                                                  |
-| (senderCert, senderPub, senderSalt)-->CARD_PAIR---------------------------------------------->          |                                       
-|                                                                      GRIDPLUS_CA_KEY.verify(senderCert) |
+| (senderCert, senderPub, senderSalt)---->CARD_PAIR---------------------------------------------->        |   
 |                                                                                receiverSalt := random() |
+|                                                                      GRIDPLUS_CA_KEY.verify(senderCert) |
 |                                                                ecdhSec := ECDH(senderPub, receiverPriv) |
-|                                                              sessionKey := sha512(senderSalt | ecdhSec) |
+|                                               sessionKey := sha512(senderSalt | receiverSalt | ecdhSec) |
+|                                                               (encryptKey, macKey) := split(sessionKey) |  
 |                                                                                       aesIV := random() |
 |                                                       channel := new_channel(encryptKey, macKey, aesIV) |
 |                                            receiverSig := receiverPriv.sign(sha256(sessionKey | aesIV)) |
-| <--------------------------CARD_PAIR_2<---(receiverCert, receiverPub, receiverSalt, aesIV, receiverSig) |
+| <---------------------------CARD_PAIR_2<--(receiverCert, receiverPub, receiverSalt, aesIV, receiverSig) |
 | GRIDPLUS_CA_KEY.verify(receiverCert)                                                                    |
 | ecdhSec := ECDH(receiverPub, senderPriv)                                                                |
-| sessionKey := sha512(receiverSalt | ecdhSec)                                                            |
+| sessionKey := sha512(senderSalt | receiverSalt | ecdhSec)                                               |
 | receiverPub.verify(receiverSig, sha256(sessionKey | aesIV))                                             |
 | senderSig := senderSig.sign(sha256(sessionKey | aesIV))                                                 |  
 | (encryptKey, macKey) := split(sessionKey)                                                               |       
@@ -123,6 +124,7 @@ The following table contains the full list of supported commands. [Section 3.2](
 | [SEND_PHONONS](#send_phonons)       | 0x35 | Build an encrypted transaction to transfer phonons to another card. |
 | [SET_RECV_LIST](#set_recv_list)     | 0x37 | Optional receive whitelist, to allow a terminal to pre-approve which phonons should be accepted in a transfer. |
 | [RECV_PHONONS](#recv_phonons)       | 0x36 | Process and receive an encrypted transaction, containing a transfer of some phonons. |
+| [TRANSACTION_ACK](#transaction_ack) | 0x38 | Acknowledge completion of a phonon transaction to inform the sending card it can clean up the spent outputs | 
 | [INIT_CARD_PAIRING](#init_card_pairing) | 0x50 | Initiate a card to card secure pairing. | 
 | [CARD_PAIR](#card_pair)                  | 0x51 |  Exchange the pairing initation data from INIT_CARD_PAIRING with the card to be paired. |
 | [CARD_PAIR_2](#card_pair_2)                | 0x52 | Exchange the returned pairing data from CARD_PAIR with the initiating card. |
@@ -598,6 +600,30 @@ No Response Data, just Status Code
 |:------------|:----------------------------------------------------------------|
 |  0x9000     |  Success                                                        |
 
+### TRANSACTION_ACK 
+* CLA: 0x80
+* INS: 0x38
+* P1: 0x00
+* P2: 0x00
+
+Once a terminal has verified that a phonon transaction is complete. Send this message to the sending card to acknowledge which key indexes have been received, so that the sending card can clean up intermediate state held during the transaction. 
+
+The Phonon Key Index List is an array of 2 byte key indices. 
+
+Command Data: 
+|    Tag   |  Length  |            Value                       |
+|:---------|:---------|:---------------------------------------|
+|    0x42  | N * 2    | Phonon Key Index List                  |
+
+
+Response Data: 
+No Response Data, just Status Code
+
+
+| Status word |                      Description                                |
+|:------------|:----------------------------------------------------------------|
+|  0x9000     |  Success                                                        |
+
 #### INIT_CARD_PAIRING
 * CLA: 0x80
 * INS: 0x50
@@ -695,7 +721,5 @@ Response Data:
 |    Tag   |  Length  |            Value                       |
 |:---------|:---------|:---------------------------------------|
 |    0x94  |     1    | Sender Pairing Idx                     |
-
-
 
 
