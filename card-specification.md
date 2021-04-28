@@ -614,9 +614,9 @@ None
 Response Data: 
 |    Tag   |  Length  |            Value                       |
 |:---------|:---------|:---------------------------------------|
-|          |          | Card Certificate                       |
-|          |          | Public Key                             | 
-|          |          |  Salt                                  |
+|   0x90   |  Varies  | Card Certificate                       |
+|   0x80   |    65    | Card Public Key                      | 
+|   0x91   |    32    | Salt                                 |
 
 | Status word |                      Description                                |
 |:------------|:----------------------------------------------------------------|
@@ -642,17 +642,17 @@ Relays the INIT_CARD_PAIRING data from the sender card to the receiver card. The
 Command Data: 
 |    Tag   |  Length  |            Value                       |
 |:---------|:---------|:---------------------------------------|
-|          |          | Sender Card Certificate                |
-|          |          | Sender Public Key                      | 
-|          |          | Salt                                   |
+|   0x90   | Varies   | Sender Card Certificate                |
+|   0x80   |    65    | Sender Public Key                      | 
+|   0x91   |    32    | Salt                                   |
 
 Response Data: 
 |    Tag   |  Length  |            Value                       |
 |:---------|:---------|:---------------------------------------|
-|          |          | Receiver Card Certificate              |
-|          |          | Receiver Public Key                    | 
-|          |          | aesIV                                  |
-|          |          | receiver Sig                           |
+|   0x90   |  Varies  | Receiver Card Certificate              |
+|   0x80   |  65      | Receiver Public Key                    | 
+|   0x92   |  32      | aesIV                                  |
+|   0x93   |  72 - 74 | receiver Sig                           |
 
 #### CARD_PAIR_2
 * CLA: 0x80
@@ -660,21 +660,21 @@ Response Data:
 * P1: 0x00
 * P2: 0x00
 
-Relays the Receiver Card's response to CARD_PAIR to the Sender Card. The Sender performs the same validation and session key establishment sequence as the Receiver Card performed in CARD_PAIR, except it uses the Receiver's aesIV instead of generating its own. 
+Relays the Receiver Card's response to CARD_PAIR to the Sender Card. The Sender performs the same validation and session key establishment sequence as the Receiver Card performed in CARD_PAIR, except it uses the Receiver's aesIV instead of generating its own. The Sender Card also validates the Receiver Card's signature over the channel pairing secret, providing validation that the channel pairing secret is correct and authenticating the identity of the Receiver Card. 
 
 Command Data: 
 |    Tag   |  Length  |            Value                       |
 |:---------|:---------|:---------------------------------------|
-|          |          | Receiver Card Certificate              |
-|          |          | Receiver Public Key                    | 
-|          |          | aesIV                                  |
-|          |          | receiver Sig                           |
+|   0x90   |  Varies  | Receiver Card Certificate              |
+|   0x80   |  65      | Receiver Public Key                    | 
+|   0x92   |  32      | aesIV                                  |
+|   0x93   |  72 - 74 | Receiver Channel Sig                   |
 
 Response Data: 
 |    Tag   |  Length  |            Value                       |
 |:---------|:---------|:---------------------------------------|
-|          |          | Sender Sig                             |
-|          |          | Sender Pairing Idx                     |
+|   0x93   |  72 - 74 | Sender Channel Sig                     |
+|   0x94   |     1    | Sender Pairing Idx                     |
 
 #### FINALIZE_PAIRING
  * CLA: 0x80
@@ -682,6 +682,19 @@ Response Data:
 * P1: 0x00
 * P2: 0x00
 
+Relay the Sender's signature over the channel pairing secret to the Receiver, along with a pairing index for the terminal. The Receiver Card validates the Sender Card's signature, validating the correctness of the channel secret and authenticating the identity of the Sender Card. Each side has now mutually authenticated the other and validated the correctness of the channel pairing secret (session key and aesIV). The card to card secure channel is now open. The Receiver Card replies with a pairingIdx for use by the terminal. 
+
+Command Data: 
+|    Tag   |  Length  |            Value                       |
+|:---------|:---------|:---------------------------------------|
+|    0x93  |  72 - 74 | Sender Channel Sig             |
+|    0x94  |     1    | Sender PairingIdx                      | 
+
+
+Response Data: 
+|    Tag   |  Length  |            Value                       |
+|:---------|:---------|:---------------------------------------|
+|    0x94  |     1    | Sender Pairing Idx                     |
 
 
 
