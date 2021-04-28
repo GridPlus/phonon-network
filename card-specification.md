@@ -68,7 +68,7 @@ Terminal                                                                   Card
 |                                                                              |
 ```
 
-Card to Card Secure Channel
+### Card to Card Secure Channel
 ```
 Sender Card                                   TERMINAL                              Receiver Card
 ========                                       ======                                =============
@@ -125,6 +125,11 @@ The following table contains the full list of supported commands. [Section 3.2](
 | [SET_RECV_LIST](#set_recv_list)     | 0x37 | Optional receive whitelist, to allow a terminal to pre-approve which phonons should be accepted in a transfer. |
 | [RECV_PHONONS](#recv_phonons)       | 0x36 | Process and receive an encrypted transaction, containing a transfer of some phonons. |
 | [TRANSACTION_ACK](#transaction_ack) | 0x38 | Acknowledge completion of a phonon transaction to inform the sending card it can clean up the spent outputs | 
+| [INIT_CARD_PAIRING](#init_card_pairing) | 0x50 | Initiate a card to card secure pairing. | 
+| [CARD_PAIR](#card_pair)                  | 0x51 |  Exchange the pairing initation data from INIT_CARD_PAIRING with the card to be paired. |
+| [CARD_PAIR_2](#card_pair_2)                | 0x52 | Exchange the returned pairing data from CARD_PAIR with the initiating card. |
+| [FINALIZE_CARD_PAIRING](#finalize_card_pairing)      | 0x53 | Return the pairing info and initial card's signature on the session key to finalize the pairing. |
+
 
 ### 3.2 Data Format
 The following sections describe the data format of each command and the card's response to that command.
@@ -618,5 +623,103 @@ No Response Data, just Status Code
 | Status word |                      Description                                |
 |:------------|:----------------------------------------------------------------|
 |  0x9000     |  Success                                                        |
+
+#### INIT_CARD_PAIRING
+* CLA: 0x80
+* INS: 0x50
+* P1: 0x00
+* P2: 0x00
+
+Initializes a card pairing, requesting that the first card contacted in the pairing (henceforth known as the sender) generate a salt and send back its GridPlus CA signed certificate as well as the certificate public key. This must be the signed certificate's public key, and not an ephemeral public key, or else a malicious terminal could substitute the public key for it's own in order to impersonate the card. 
+
+Card pairings should be delineated from terminal secure channel pairings, as they are used to enable encrypted retrieval of phonon private keys, which are unsafe to retrieve if the card is paired with any entity besides a validated GridPlus Phonon Card (for example a terminal.) 
+
+Command Data: 
+None
+
+Response Data: 
+|    Tag   |  Length  |            Value                       |
+|:---------|:---------|:---------------------------------------|
+|   0x90   |  Varies  | Card Certificate                       |
+|   0x80   |    65    | Card Public Key                      | 
+|   0x91   |    32    | Salt                                 |
+
+| Status word |                      Description                                |
+|:------------|:----------------------------------------------------------------|
+|  0x9000     |  Success                                                        |
+
+#### CARD_PAIR
+* CLA: 0x80
+* INS: 0x51
+* P1: 0x00
+* P2: 0x00
+
+Relays the INIT_CARD_PAIRING data from the sender card to the receiver card. The Receiver Card performs the following procedure to validate the Sender's identity as a GridPlus Phonon Card and to establish a secure channel with the sender. (Shown in (#Card To Card Secure Channel) 
+
+1. Verify the Sender Card Certificate has been signed by the GridPlus CA Key. An error here should abort the establishment of the channel. 
+2. Compute an ECDH secret with the Sender Public Key and the Receiver Private Key 
+3. Compute the SHA-512 checksum of Sender Salt appended with the ECDH secret. `sessionKey := sha512(senderSalt | ecdhSec)`
+4. Split the session key in half to derive an Encryption Key and a MAC. `(encryptKey, macKey) := split(sessionKey)`
+5. Generate a random AES Init Vector (aesIV)
+6. Initiate an AES channel with the Encryption Key, MAC, and aesIV. `channel := new_channel(encryptKey, macKey, aesIV)`
+7. Create a signature with the Receiver Certificate Private Key on data known to the sender, in this case the sha256 of the session key appended with the AES init vector. (TBD, this may be redundant pending review of Card to Card Secure Channel Corrections PR)
+
+
+Command Data: 
+|    Tag   |  Length  |            Value                       |
+|:---------|:---------|:---------------------------------------|
+|   0x90   | Varies   | Sender Card Certificate                |
+|   0x80   |    65    | Sender Public Key                      | 
+|   0x91   |    32    | Salt                                   |
+
+Response Data: 
+|    Tag   |  Length  |            Value                       |
+|:---------|:---------|:---------------------------------------|
+|   0x90   |  Varies  | Receiver Card Certificate              |
+|   0x80   |  65      | Receiver Public Key                    | 
+|   0x92   |  32      | aesIV                                  |
+|   0x93   |  72 - 74 | receiver Sig                           |
+
+#### CARD_PAIR_2
+* CLA: 0x80
+* INS: 0x52
+* P1: 0x00
+* P2: 0x00
+
+Relays the Receiver Card's response to CARD_PAIR to the Sender Card. The Sender performs the same validation and session key establishment sequence as the Receiver Card performed in CARD_PAIR, except it uses the Receiver's aesIV instead of generating its own. The Sender Card also validates the Receiver Card's signature over the channel pairing secret, providing validation that the channel pairing secret is correct and authenticating the identity of the Receiver Card. 
+
+Command Data: 
+|    Tag   |  Length  |            Value                       |
+|:---------|:---------|:---------------------------------------|
+|   0x90   |  Varies  | Receiver Card Certificate              |
+|   0x80   |  65      | Receiver Public Key                    | 
+|   0x92   |  32      | aesIV                                  |
+|   0x93   |  72 - 74 | Receiver Channel Sig                   |
+
+Response Data: 
+|    Tag   |  Length  |            Value                       |
+|:---------|:---------|:---------------------------------------|
+|   0x93   |  72 - 74 | Sender Channel Sig                     |
+|   0x94   |     1    | Sender Pairing Idx                     |
+
+#### FINALIZE_CARD_PAIRING
+ * CLA: 0x80
+* INS: 0x53
+* P1: 0x00
+* P2: 0x00
+
+Relay the Sender's signature over the channel pairing secret to the Receiver, along with a pairing index for the terminal. The Receiver Card validates the Sender Card's signature, validating the correctness of the channel secret and authenticating the identity of the Sender Card. Each side has now mutually authenticated the other and validated the correctness of the channel pairing secret (session key and aesIV). The card to card secure channel is now open. The Receiver Card replies with a pairingIdx for use by the terminal. 
+
+Command Data: 
+|    Tag   |  Length  |            Value                       |
+|:---------|:---------|:---------------------------------------|
+|    0x93  |  72 - 74 | Sender Channel Sig             |
+|    0x94  |     1    | Sender PairingIdx                      | 
+
+
+Response Data: 
+|    Tag   |  Length  |            Value                       |
+|:---------|:---------|:---------------------------------------|
+|    0x94  |     1    | Sender Pairing Idx                     |
 
 
