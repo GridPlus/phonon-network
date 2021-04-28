@@ -676,7 +676,7 @@ Response Data:
 |   0x93   |  72 - 74 | Sender Channel Sig                     |
 |   0x94   |     1    | Sender Pairing Idx                     |
 
-#### FINALIZE_PAIRING
+#### FINALIZE_CARD_PAIRING
  * CLA: 0x80
 * INS: 0x53
 * P1: 0x00
