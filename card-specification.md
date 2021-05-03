@@ -119,7 +119,7 @@ The following table contains the full list of supported commands. [Section 3.2](
 | [LIST_PHONONS](#list_phonons)       | 0x32 | Iterate the full list of phonons, returning 'N' phonons at a time. Optional list filters may be applied. |
 | [GET_PHONON_PUB_KEY](#get_phonon_pub_key) | 0x33 | Fetch a phonon's public key by key index |
 | [CREATE_PHONON](#create_phonon)    | 0x30 | Create an empty phonon and return its public key. This phonon will be unspendable until a descriptor has been set. |
-| [SET_DESCRIPTOR](#set_descriptors)  | 0x31 | Finalize a newly created phonon, by setting a descriptor with details about the asset it encumbers. |
+| [SET_DESCRIPTOR](#set_descriptor)  | 0x31 | Finalize a newly created phonon, by setting a descriptor with details about the asset it encumbers. |
 | [DESTROY_PHONON](#destroy_phonon) | 0x34 | Destroy a phonon to export its private key. |
 | [SEND_PHONONS](#send_phonons)       | 0x35 | Build an encrypted transaction to transfer phonons to another card. |
 | [SET_RECV_LIST](#set_recv_list)     | 0x37 | Optional receive whitelist, to allow a terminal to pre-approve which phonons should be accepted in a transfer. |
