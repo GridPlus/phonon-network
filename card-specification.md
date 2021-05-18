@@ -93,9 +93,9 @@ Sender Card                                   TERMINAL                          
 | senderSig := senderSig.sign(sha256(sessionKey | aesIV))                                                 |  
 | (encryptKey, macKey) := split(sessionKey)                                                               |       
 | channel := new_channel(encryptKey, macKey, aesIV)                                                       |
-| (senderSig, senderPairingIdx)-------------->FINALIZE_CARD_PAIRING-------------------------------------->|
+| (senderSig)-------------->FINALIZE_CARD_PAIRING----------------------------------------------->         |
 |                                                   senderPub.verify(senderSig, sha256(sessionKey | aesIV)|
-|                                  (Terminal stores channel info)<-------------------(receiverPairingIdx) |
+|                    (Secure channel is established)<--------------------------------------------------() |
 ```
 ## 2 Communication Protocol
 Card commands are exchanged via ISO-7816 command/response APDU protocol.
@@ -678,7 +678,7 @@ Response Data:
 |   0x90   |  Varies  | Receiver Card Certificate              |
 |   0x80   |  65      | Receiver Public Key                    | 
 |   0x92   |  32      | aesIV                                  |
-|   0x93   |  72 - 74 | receiver Sig                           |
+|   0x93   |  72 - 74 | Receiver Channel Sig                   |
 
 #### CARD_PAIR_2
 * CLA: 0x80
@@ -700,7 +700,6 @@ Response Data:
 |    Tag   |  Length  |            Value                       |
 |:---------|:---------|:---------------------------------------|
 |   0x93   |  72 - 74 | Sender Channel Sig                     |
-|   0x94   |     1    | Sender Pairing Idx                     |
 
 #### FINALIZE_CARD_PAIRING
  * CLA: 0x80
@@ -713,13 +712,10 @@ Relay the Sender's signature over the channel pairing secret to the Receiver, al
 Command Data: 
 |    Tag   |  Length  |            Value                       |
 |:---------|:---------|:---------------------------------------|
-|    0x93  |  72 - 74 | Sender Channel Sig             |
-|    0x94  |     1    | Sender PairingIdx                      | 
+|    0x93  |  72 - 74 | Sender Channel Sig                     |
 
 
 Response Data: 
-|    Tag   |  Length  |            Value                       |
-|:---------|:---------|:---------------------------------------|
-|    0x94  |     1    | Receiver Pairing Idx                   |
+None, except for status word. 
 
 
