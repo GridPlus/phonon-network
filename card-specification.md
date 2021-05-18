@@ -720,6 +720,6 @@ Command Data:
 Response Data: 
 |    Tag   |  Length  |            Value                       |
 |:---------|:---------|:---------------------------------------|
-|    0x94  |     1    | Sender Pairing Idx                     |
+|    0x94  |     1    | Receiver Pairing Idx                   |
 
 
