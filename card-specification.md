@@ -102,6 +102,12 @@ Card commands are exchanged via ISO-7816 command/response APDU protocol.
 
 TODO: Add details/links to ISO-7816 and other relevant PHY protocol resources.
 
+#### Supported Curves
+
+| ID   | Curve | 
+|:-----|:------|
+| 0x00 | secp256k1 | 
+
 ## 3 Command Description
 The following table contains the full list of supported commands. [Section 3.2](#32-data-format) details the data format of each command and response APDU.
 
@@ -126,7 +132,7 @@ The following table contains the full list of supported commands. [Section 3.2](
 | [RECV_PHONONS](#recv_phonons)       | 0x36 | Process and receive an encrypted transaction, containing a transfer of some phonons. |
 | [TRANSACTION_ACK](#transaction_ack) | 0x38 | Acknowledge completion of a phonon transaction to inform the sending card it can clean up the spent outputs | 
 | [INIT_CARD_PAIRING](#init_card_pairing) | 0x50 | Initiate a card to card secure pairing. | 
-| [CARD_PAIR](#card_pair)                  | 0x51 |  Exchange the pairing initation data from INIT_CARD_PAIRING with the card to be paired. |
+| [CARD_PAIR](#card_pair)                  | 0x51 |  Exchange the pairing initiation data from INIT_CARD_PAIRING with the card to be paired. |
 | [CARD_PAIR_2](#card_pair_2)                | 0x52 | Exchange the returned pairing data from CARD_PAIR with the initiating card. |
 | [FINALIZE_CARD_PAIRING](#finalize_card_pairing)      | 0x53 | Return the pairing info and initial card's signature on the session key to finalize the pairing. |
 
@@ -376,7 +382,7 @@ Empty. Successful response status code (0x9000) means PIN verification was succe
 #### CREATE_PHONON
 * CLA: 0x80
 * INS: 0x30
-* P1: 0x00
+* P1: Curve Type
 * P2: 0x00
 
 Command Data: None
@@ -386,14 +392,19 @@ Response Data:
 |:---------|:---------|:---------------------------------------|
 |    0x40  | 71       | Phonon Key                             |
 |    0x41  |  1       | Phonon Key Index                       |
-|    0x80  | 65       | Phonon ECC Public Key Value            |
-
+|    0x80  | 65       | Phonon secp256k1 Public Key Value      |
+|  ...     | ...      | or other curve type public key         |
+ 
 | Status word |                      Description                                |
 |:------------|:----------------------------------------------------------------|
 |  0x9000     |  Success                                                        |
 |  0x6A84     |  Phonon table full                                              |
 
 The create phonon command asks the card to generate a public key and store it in the card's list of phonons. The card returns this public key and its index to the terminal. After the terminal takes this public key and assigns a phonon to it, SET_DESCRIPTOR will be used to define additional data associated with this phonon's public key.
+
+P1 is used to identify the cryptographic curve which should be used to generate this phonon's key. Curve ID's given in the [Supported Curves](#Supported_Curves) table.  
+
+Response data consists of a Phonon Key TLV (0x40) containing a Phonon Key Index (0x41) and a single public key matching the requested curve type, with the tag identifying the curve. For example, 0x80 for a secp256k1 ECC public key. 
 
 #### SET_DESCRIPTOR
 * CLA: 0x80
@@ -404,15 +415,16 @@ The create phonon command asks the card to generate a public key and store it in
 Command Data: 
 |    Tag   |  Length  |            Value                       |
 |:---------|:---------|:---------------------------------------|
-|    0x50  |  15      | Phonon Descriptor                      |
+|    0x50  |  15 + N  | Phonon Descriptor                      |
 |    0x41  |  2       | Phonon Key Index                       |
 |    0x81  |  2       | Currency Type                          |
-|    0x83  |  4       | Value                                  |                             
+|    0x83  |  4       | Denomination                           |
+|    Key   |  N       | Value  (optional)                      |                    
 
 Currency Types Value Table: 
 |   Currency         | Code    |
 |:-------------------|:--------|
-|  Not Set (Default) | 0x0000  |
+| Not Set (Default)  | 0x0000  |
 | Bitcoin            | 0x0001  |
 | Ethereum           | 0x0002  |
 
@@ -425,7 +437,7 @@ No response data.
 |  0x9000     |  Success                                  |
 |  0x????     |  Key Not Found                            |
 
-Set descriptor asks the card to set data for a phonon key which describes the blockchain assets that key encumbers. Once set, a descriptor cannot be modified again. 
+Set descriptor asks the card to set data for a phonon key which describes the blockchain assets that key encumbers. Once set, a descriptor cannot be modified again. All phonons must be set with a descriptor for Key Index, Currency Type, and Denomination. Additionally, they may be described with additional arbitrary key value pairs in TLV format. This TLV data will be available when the phonon is retrieved, and can also be used for filtering phonons using the LIST_PHONONS command. 
 
 #### LIST_PHONONS
 * CLA: 0x80
@@ -449,8 +461,9 @@ Command Data:
 |:---------|:---------|:---------------------------------------|
 |    0x60  |          | Phonon Filter                          |
 |    0x81  |  2       | Coin Type                              |
-|    0x84  |  4       | Value Less Than or Equal to            |
-|    0x85  |  4       | Value Greater Than or Equal to 
+|    0x84  |  4       | Denomination Less Than or Equal to     |
+|    0x85  |  4       | Denomination Greater Than or Equal to  |
+|    Key   |  N       | Value (Optional)                       |
 
 
 Response Data:
@@ -461,6 +474,7 @@ Response Data:
 |    0x83  |  4       | Phonon Value                                         |
 |    0x81  |  2       | Coin Type                                            |
 |    0x41  |  2       | Phonon Key Index                                     |
+|   Keys   | N        | Values (optional)
 
 
 | Status word |                      Description                                |
@@ -468,7 +482,9 @@ Response Data:
 |  0x9000     |  Success                                                        |
 | 0x9XXX | Success with extended list. XXX encodes the number of additional phonons left to be returned in a followup LIST_PHONONS request |
 
-List phonons requests a collection of phonons from the card which satisfy a given filter subscription. The filter conditions are set using the P1 and P2 values along with command data describing the actual values to filter for. The card will return a list of phonon descriptions matching the filter settings. 
+List phonons requests a collection of phonons from the card which satisfy a given filter condition. The filter should always include a coin type and may set a denomination filter using the P2 Value and the Less Than (0x84) and greater than (0x85) TLVs. The filter may optionally provide additional TLVs, which will match for equality. 
+
+The card will return a list of phonon descriptions matching the filter settings, including any arbitrary Key Values, if present. 
 
 #### GET_PHONON_PUB_KEY
 * CLA: 0x80
@@ -476,7 +492,7 @@ List phonons requests a collection of phonons from the card which satisfy a give
 * P1: 0x00
 * P2: 0x00
 
-Get phonon pub key returns the public key representing the phonon at the specified key index. This is intended to be used after filtering the list returned by list phonons, which omits the public keys in order to save space in the response. 
+Get phonon pub key returns the public key representing the phonon at the specified key index. This is intended to be used after filtering the list returned by list phonons, which omits the public keys in order to save space in the response. The pub key returned will use an identifying Tag to denote the format of the public key for this particular phonon. 
 
 Command Data: 
 |    Tag   |  Length  |            Value                       |
@@ -487,8 +503,10 @@ Response Data:
 |    Tag   |  Length  |            Value                       |
 |:---------|:---------|:---------------------------------------|
 |    0x43  | Variable | Transfer Phonon Packet                 |
-|    0x44  |          | Phonon Complete Description  
+|    0x44  |          | Phonon Complete Description            |
 |    0x80  | 65       | Phonon ECC Public Key Value            |
+|  ...     | ...      | or other curve type public key         |
+
 
 | Status word |                      Description                                |
 |:------------|:----------------------------------------------------------------|
@@ -512,7 +530,9 @@ Command Data:
 Response Data: 
 |    Tag   |  Length  |            Value                       |
 |:---------|:---------|:---------------------------------------|
-|    0x81  | 32       | Phonon ECC Private Key Value          |
+|    0x81  | 32       | Phonon ECC Private Key Value           |
+|  ...     | ...      | or other curve type private key         |
+
 
 | Status word |                      Description                                |
 |:------------|:----------------------------------------------------------------|
