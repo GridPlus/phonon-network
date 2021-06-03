@@ -406,15 +406,18 @@ Command Data:
 |:---------|:---------|:---------------------------------------|
 |    0x50  |  15      | Phonon Descriptor                      |
 |    0x41  |  2       | Phonon Key Index                       |
-|    0x81  |  2       | Currency Type                          |
-|    0x83  |  4       | Value                                  |                             
+|    0x81  |  2       | Schema Type                            |
+|    0x83  |  2       | Data Size                              |
+|    0x84  |  N       | Phonon data (CBOR-encoded payload)     | 
 
-Currency Types Value Table: 
-|   Currency         | Code    |
+Schema type determines the structure of the data that will be packed into the phonon:
+ 
+|   Schmea Type      | Code    |
 |:-------------------|:--------|
 |  Not Set (Default) | 0x0000  |
 | Bitcoin            | 0x0001  |
-| Ethereum           | 0x0002  |
+| ETH - ether        | 0x0002  |
+| ETH - ERC20        | 0x0003  |
 
 
 Response Data:
